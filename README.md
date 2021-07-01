@@ -1,6 +1,5 @@
 # Projectdb
-RRESERVATION
-Reservación de restaurante
+**RRESERVATION: Reservación de mesas para un restaurante**
 
 **Miembros:**
 Johannes Loayza (201910486)
@@ -31,3 +30,6 @@ Validación de objetos json
 **Deployment scripts:**
 run.py
 Sc
+
+**Nota: **
+Ejecutar primero el archivo  mesass.py y luego run.py
