@@ -31,5 +31,5 @@ Validación de objetos json
 run.py
 Sc
 
-**Nota: **
+**Nota:**
 Ejecutar primero el archivo  mesass.py y luego run.py
