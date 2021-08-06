@@ -32,4 +32,4 @@ run.py
 Sc
 
 **Nota:**
-Ejecutar primero el archivo  mesass.py y luego run.py
+Ejecutar primero el archivo  ListMesas.py y luego run.py
