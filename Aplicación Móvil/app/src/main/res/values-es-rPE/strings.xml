@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RReservaciones</string>
+    <string name="welcome_main">Bienvenid@ al sistema de reservaciones.</string>
+    <string name="login_main">Ingresa</string>
+    <string name="login_text">Ingresa tu usuario y contraseña en RReservaciones</string>
+    <string name="register_main">Registrarse</string>
+    <string name="register_text">¿Primera ves aca? ¡Registrate ahora!</string>
+    <string name="enter_name">Ingrese su nombre de usuario</string>
+    <string name="enter_password">Ingrese su contraseña</string>
+    <string name="re_enter_password">Vuelva a ingresar su contraseña</string>
+    <string name="enter_email">Ingrese su correo electronico</string>
+    <string name="create_account">Crear cuenta</string>
+    <string name="toast_password">Las contraseñas no coinciden</string>
+    <string name="reservation_main">Hacer una reserva</string>
+    <string name="toast_email">Correo electronico invalido</string>
+    <string name="empty_fields">Por favor rellenar todos los campos</string>
+    <string name="reservation_text">Por favor indicar el numero de mesas, personas, hora y fecha para la reserva</string>
+    <string name="reservation_commit">Reservar</string>
+    <string name="name_txt">Ingrese su nombre</string>
+    <string name="guests_number_txt">Ingresar numero de comensales</string>
+    <string name="phone_txt">Ingrese su telefono</string>
+    <string name="reservation_succes">La reserva fue creada</string>
+    <string name="toast_phone">Numero de telefono invalido</string>
+    <string name="main_body_txt">La reserva ha sido creada exitosamente.</string>
+    <string name="mail_subject">"Reservacion para "</string>
+    <string name="is_closed_txt">El restaurante esta cerrado a esa hora</string>
+    <string name="past_date_txt">No se puede reservar en el pasado</string>
+</resources>
