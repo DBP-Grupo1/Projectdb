@@ -1,17 +1,36 @@
+  
 import datetime
 import sys
 
 from app import app, db
-from flask import render_template, flash, redirect, session, g, request, jsonify,url_for
+from flask import render_template, flash, redirect, session, g, request, jsonify,url_for,session
 
 from .forms import ReservationForm, ShowReservationsOnDateForm, AddTableForm
 from .controller import create_reservation
 from .models import Mesa, Reservacion, User
+from flask_login import (
+    UserMixin,
+    LoginManager,
+    login_manager,
+    login_user,
+    login_required,
+    logout_user,
+    current_user,
+)
 
 
 # Time Display: book table in fixed hours when the restaurant operates.
 RESTAURANT_OPEN_TIME = 10
 RESTAURANT_CLOSE_TIME = 22
+
+
+login_manager = LoginManager()
+login_manager.login_view = "/users/login"
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(int(id))
 
 @app.route('/')
 @app.route('/index')
@@ -27,11 +46,15 @@ def create_user():
     response={}
     try:
         username = request.get_json()['user']#simula json.loads
+        name = request.get_json()['nombres']
+        lastname = request.get_json()['apellidos']
         email = request.get_json()['email']
         password = request.get_json()['password']
+
         user_data = User.query.filter_by(username=username).first()
         user_email = User.query.filter_by(email=email).first()
-
+        
+        
         #Determinando errores
         if(len(username)==0 or len(password)==0 or len(email)==0 or len(username)>20 or len(password)>8):
             raise Exception
@@ -39,12 +62,17 @@ def create_user():
             raise Exception
         #Determinando errores
 
-        usuarios = User(username=username, email=email,password=password)
+        usuarios = User(username=username,name=name,lastname=lastname, email=email,password=password)
         db.session.add(usuarios)
         db.session.commit()
+
         response['user'] = usuarios.username
+        response['nombres'] = usuarios.name
+        response['apellidos'] = usuarios.email
         response['email'] = usuarios.email
         response['password'] = usuarios.password
+        response['nombres']=usuarios.nombres
+        response['apellidos']=usuarios.apellidos
     except Exception:
         if(len(username)==0):
             error1= True
@@ -86,13 +114,12 @@ def login_user():
     try:
         username = request.get_json()['user']
         password = request.get_json()['password']
-        user_data = User.query.filter_by(username=username).first()
+        user_data = User.query.filter_by(username=username).first()   
+        session['username']=username
         if user_data is None:
             raise Exception
         elif not (password==user_data.password):
             raise Exception
-
-        
     except Exception:
         exist = False
     finally:
@@ -100,8 +127,8 @@ def login_user():
     if not exist:
         response['error_message']= "Usuario o contraseña incorrecta"
     
+    
     response['exist'] = exist
-
     return jsonify(response)    
 
 
@@ -114,27 +141,61 @@ def registration():
 def login():
     return render_template("login.html")
 
+@app.route("/logout", methods=['GET', 'POST'])
+def logout():
+    return  redirect(url_for("login"))
 
-@app.route('/reservation_status', methods=['GET', 'POST'])
-def reservation_status():
-    form = ReservationForm()
-    if form.validate_on_submit():
-        if form.reservacion_datetime.data < datetime.datetime.now():
-            flash("No puedes reservar fechas en el pasado")
-            return redirect('/reservation_status')
-        fecha_reservacion = datetime.datetime.combine(form.reservacion_datetime.data.date(), datetime.datetime.min.time())
-        if form.reservacion_datetime.data < fecha_reservacion + datetime.timedelta(hours=RESTAURANT_OPEN_TIME) or \
-        form.reservacion_datetime.data > fecha_reservacion + datetime.timedelta(hours=RESTAURANT_CLOSE_TIME):
-            flash("El restaurante esta cerrado en esa hora!")
-            return redirect('/reservation_status')
-        reservacion = create_reservation(form)
-        if reservacion:
-            flash("La reservacion ha sido creada!")
-            return redirect('/index')
-        else:
-            flash("Esa hora ya ha sido tomada! Intente otra vez")
-            return redirect('/reservation_status')
-    return render_template('reservation_status.html', title="Hacer Reservacion", form=form)
+
+
+
+@app.route('/users/reservation_status', methods=['GET', 'POST'])
+def reservation():
+    response={}
+    error=False
+    
+    try:
+        usuario = session['username']   
+        
+        celular = request.get_json()['celular']
+
+        num_person = request.get_json()['numberperson']
+
+        objmesa = Mesa.query.filter_by(capacidad=num_person).filter_by(ocupado="NO").first()
+        
+        mesa_id = objmesa.id
+
+        objmesa.ocupado="SI"
+
+        date_reserv = request.get_json()['date']
+
+        #Determinando errores
+        if objmesa is None:
+            raise Exception
+        #Determinando errores
+
+        reservaciones = Reservacion(usuario=usuario,celular=celular,mesa_id=mesa_id,num_personas=num_person,hora_reservacion=date_reserv)
+        db.session.add(reservaciones)
+        db.session.commit()
+        response['error_message']="Reservación exitosa"
+
+    except Exception:
+        error=True
+        if objmesa is None:
+            response['error_message']='No hay mesas disponibles'
+        if date_reserv < datetime.datetime.now():
+            response['error_message']='Horario no permitido'
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+    response['error']=error
+    return jsonify(response)
+
+@app.route("/reservation_status", methods=['GET', 'POST'])
+def reservacion_user():
+    return render_template("reservation_status.html") 
+
 
 @app.route('/show_tables', methods=['GET', 'POST'])
 def show_tables():
@@ -150,20 +211,8 @@ def show_tables():
     mesas = Mesa.query.all()
     return render_template('show_tables.html', title="Mesas", mesas=mesas, form=form)
 
-@app.route('/show_reservations', methods=['GET', 'POST'])
-@app.route('/show_reservations/<reservation_date>', methods=['GET', 'POST'])
-def show_reservations(fecha_reservacion = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d")):
-    form = ShowReservationsOnDateForm()
-    if form.validate_on_submit():
-        res_date = datetime.datetime.strftime(form.fecha_reservacion.data, "%Y-%m-%d")
-        return redirect('/show_reservations/' + res_date)
-    res_date = datetime.datetime.strptime(fecha_reservacion, "%Y-%m-%d")
-    reservaciones = Reservacion.query.filter(Reservacion.hora_reservacion >= res_date,
-                                            Reservacion.hora_reservacion < res_date + datetime.timedelta(days=1)).all()
 
-    return render_template('show_reservations.html', title="Reservaciones", reservaciones=reservaciones, form=form)
 
 @app.route('/admin')
 def admin():
     return render_template('admin.html', title="Admin")
-

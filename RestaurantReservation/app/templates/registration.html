@@ -18,6 +18,16 @@
         <p id="error1" class="hidden1" style="color:red"></p>
 
         <p class="campo">
+            <label for="nombres" >Nombres: </label><br />
+            <input type="text" name="nombres" id="nombres" placeholder="Nombres">
+        </p>
+        
+        <p class="campo">
+            <label for="apellidos" >Apellidos: </label><br />
+            <input type="text" name="apellidos" id="apellidos" placeholder="Apellidos">
+        </p>
+
+        <p class="campo">
             <label for="email">Correo Electronico: </label><br />
             <input type="email" name="email" id="correo" placeholder="Correo Electronico">
         </p>
@@ -45,6 +55,8 @@
                 body: JSON.stringify({
                     //key- name:value-id
                     'user':document.getElementById('usuario').value,
+                    'nombres':document.getElementById('nombres').value,
+                    'apellidos':document.getElementById('apellidos').value,
                     'email':document.getElementById('correo').value,
                     'password':document.getElementById('pass').value
                 }),
